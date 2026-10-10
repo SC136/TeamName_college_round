@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incognito — Speak Without Being Seen</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- Material 3 Expressive Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <div class="brand-shape-logo" title="Incognito Protocol">
+            <span class="material-symbols-rounded">visibility_off</span>
+          </div>
+          <div class="brand-text">
+            <h1>INCOGNITO</h1>
+            <div class="tagline">
+              <span>Speak Without Being Seen</span>
+              <span class="handwritten-badge">&mdash; Zero-Knowledge Whistleblower</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-nav">
+          <button class="nav-btn active" data-view="member-view" id="navMemberBtn">
+            <span class="material-symbols-rounded">lock</span>
+            <span>Member Portal</span>
+          </button>
+          <button class="nav-btn" data-view="admin-view" id="navAdminBtn">
+            <span class="material-symbols-rounded">admin_panel_settings</span>
+            <span>Admin Review</span>
+          </button>
+          <button class="nav-btn" data-view="security-view" id="navSecurityBtn">
+            <span class="material-symbols-rounded">shield</span>
+            <span>Security Lab</span>
+          </button>
+          <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Material Palette">
+            <span class="material-symbols-rounded" id="themeIcon">light_mode</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Bento Area -->
+    <main class="main-content">
+
+      <!-- ============================================================ -->
+      <!-- VIEW 1: MEMBER PORTAL -->
+      <!-- ============================================================ -->
+      <section id="member-view" class="view-panel active">
+        <div class="bento-grid-2col">
+
+          <!-- Card 1: Identity & Credential Management -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="shape-icon coral">
+                  <span class="material-symbols-rounded">fingerprint</span>
+                </div>
+                <div>
+                  <h3>Member ZK Identity</h3>
+                  <span class="badge badge-tonal">Client-Side Secrets</span>
+                </div>
+              </div>
+            </div>
+            <p class="card-desc">
+              Your secret keys are generated and held exclusively in your browser memory.
+              Only your public identity commitment is enrolled in the organization's Sparse Merkle Tree.
+            </p>
+
+            <!-- Identity Profile Picker Chips -->
+            <div class="form-group">
+              <label>Choose Persona / Generate Keys</label>
+              <div class="profile-pills-row" id="profilePillsRow">
+                <button type="button" class="profile-chip active" data-profile="alice">
+                  <div class="profile-avatar-shape">A</div>
+                  <span>Alice (Staff)</span>
+                </button>
+                <button type="button" class="profile-chip" data-profile="bob">
+                  <div class="profile-avatar-shape">B</div>
+                  <span>Bob (Associate)</span>
+                </button>
+                <button type="button" class="profile-chip" data-profile="charlie">
+                  <div class="profile-avatar-shape">C</div>
+                  <span>Charlie (Technician)</span>
+                </button>
+                <button type="button" class="profile-chip" data-profile="custom">
+                  <div class="profile-avatar-shape">+</div>
+                  <span>New Random</span>
+                </button>
+              </div>
+
+              <!-- Hidden select for programmatic backward compatibility -->
+              <select id="memberProfileSelect" style="display: none;">
+                <option value="alice">alice</option>
+                <option value="bob">bob</option>
+                <option value="charlie">charlie</option>
+                <option value="custom">custom</option>
+              </select>
+
+              <button id="enrollBtn" class="btn btn-secondary btn-small" style="margin-top: 6px;">
+                <span class="material-symbols-rounded" style="font-size: 18px;">how_to_reg</span>
+                <span>Enroll Commitment to Merkle Tree</span>
+              </button>
+            </div>
+
+            <!-- Credential Bento Details -->
+            <div class="credential-bento">
+              <div class="cred-row">
+                <span class="cred-label">Public Identity Commitment (Enrolled Leaf):</span>
+                <div class="code-tile">
+                  <span id="displayCommitment" class="code-text">Loading...</span>
+                </div>
+              </div>
+              <div class="cred-row">
+                <span class="cred-label">Secret Nullifier (Never Transmitted):</span>
+                <div class="code-tile">
+                  <span id="displayNullifier" class="code-text">0x••••••••••••••••</span>
+                </div>
+              </div>
+              <div class="cred-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <span class="cred-label">Merkle Tree Status:</span>
+                <span id="enrollmentStatusBadge" class="badge badge-primary">Enrolled in Tree</span>
+              </div>
+              <div class="cred-row">
+                <span class="cred-label">Current Merkle Root:</span>
+                <div class="code-tile">
+                  <span id="displayCurrentRoot" class="code-text">Loading...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Asymmetric Note with Caveat Annotation -->
+            <div class="asymmetric-note">
+              <strong>Cryptographic Privacy Guarantee:</strong>
+              Even if administrators dump all stored records and server memory, your identity cannot be linked to any report.
+              Each topic receives an independent, uncorrelated cryptographic nullifier.
+              <span class="handwritten-annotation">&mdash; mathematically impossible to de-anonymize!</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Anonymous Report Submission -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="shape-icon gold">
+                  <span class="material-symbols-rounded">mark_email_unread</span>
+                </div>
+                <div>
+                  <h3>Submit Anonymous Report</h3>
+                  <span class="badge badge-gold">Zero-Knowledge SNARK</span>
+                </div>
+              </div>
+            </div>
+
+            <form id="reportForm">
+              <div class="form-group">
+                <label for="topicSelect">Select Reporting Channel / Category</label>
+                <select id="topicSelect" class="input-select" required>
+                  <option value="">-- Choose a Topic --</option>
+                </select>
+                <small id="topicQuotaNote" style="font-size: 0.78rem; color: var(--on-surface-variant); margin-top: 4px; display: block;">
+                  Quota: 1 submission per verified member.
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label for="reportContent">Report Body</label>
+                <textarea id="reportContent" class="input-textarea" rows="6" placeholder="Detail observed misconduct, safety hazard, or concern. Please describe facts objectively..." required></textarea>
+
+                <div class="sanitizer-bar">
+                  <div class="sanitizer-status">
+                    <span class="dot-pulse"></span>
+                    <span>Metadata &amp; PII Sanitizer Active</span>
+                  </div>
+                  <div id="riskIndicator">
+                    <span class="badge badge-tonal">Risk: LOW</span>
+                  </div>
+                </div>
+
+                <div id="sanitizerWarningBox" class="sanitizer-warnings" style="display: none;"></div>
+              </div>
+
+              <!-- Rate-Limiting Nullifier (RLN) Toggle -->
+              <div class="form-group">
+                <label class="toggle-row">
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="rlnCheckbox" checked>
+                    <span class="toggle-slider"></span>
+                  </div>
+                  <div style="font-size: 0.84rem; line-height: 1.35;">
+                    <strong>Attach Rate-Limiting Nullifier (RLN)</strong>
+                    <div style="color: var(--on-surface-variant); font-size: 0.78rem;">
+                      Shamir polynomial secret sharing mathematically slashes spammers while protecting honest whistleblowers.
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <button type="submit" id="submitReportBtn" class="btn btn-primary btn-large">
+                <span class="material-symbols-rounded">enhanced_encryption</span>
+                <span>Generate ZK Proof &amp; Submit Anonymously</span>
+              </button>
+            </form>
+
+            <!-- ZK Proof Pipeline Progress -->
+            <div id="zkProgressBox" class="zk-pipeline-card" style="display: none;">
+              <div class="pipeline-header">
+                <h4>
+                  <span class="material-symbols-rounded">psychology</span>
+                  <span>Zero-Knowledge Proof Generation Pipeline</span>
+                </h4>
+                <span class="badge badge-tonal">BN254 Scalar Field</span>
+              </div>
+              <div class="zk-steps-matrix">
+                <div class="zk-step-item active" id="stepWitness">
+                  <span class="step-num">01</span>
+                  <span>Computing Secret Witness &amp; Blinding Factors</span>
+                </div>
+                <div class="zk-step-item" id="stepMerkle">
+                  <span class="step-num">02</span>
+                  <span>Fetching Sparse Merkle Path from Registry</span>
+                </div>
+                <div class="zk-step-item" id="stepNullifier">
+                  <span class="step-num">03</span>
+                  <span>Deriving Topic-Scoped Cryptographic Nullifier</span>
+                </div>
+                <div class="zk-step-item" id="stepProof">
+                  <span class="step-num">04</span>
+                  <span>Proving SNARK Constraints (Fiat-Shamir PoK)</span>
+                </div>
+                <div class="zk-step-item" id="stepRelay">
+                  <span class="step-num">05</span>
+                  <span>Blind Network Delivery via Sanitized Relay</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submission Receipt (Asymmetric Vinyl Sticker) -->
+            <div id="receiptBox" class="receipt-sticker" style="display: none;">
+              <div class="receipt-sticker-head">
+                <div class="receipt-stamp-badge">
+                  <span class="material-symbols-rounded">verified</span>
+                </div>
+                <div>
+                  <h4 style="font-size: 1.05rem; font-weight: 600;">Report Successfully Verified &amp; Submitted!</h4>
+                  <p style="font-size: 0.82rem; color: var(--on-surface-variant);">
+                    Proof verified against Merkle root. Zero identity or network metadata transmitted.
+                  </p>
+                </div>
+              </div>
+              <div class="receipt-grid">
+                <div>
+                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Report ID:</span>
+                  <div style="font-weight: 600;" id="receiptId">-</div>
+                </div>
+                <div>
+                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Severity Classification:</span>
+                  <div><span id="receiptSeverity" class="badge badge-primary">-</span></div>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Topic-Scoped Nullifier Hash:</span>
+                  <div class="code-tile" style="margin-top: 4px;">
+                    <span id="receiptNullifier" class="code-text">-</span>
+                  </div>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Quantized Timestamp:</span>
+                  <div id="receiptTimestamp" style="font-family: var(--font-mono); font-size: 0.82rem;">-</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- VIEW 2: ADMINISTRATOR REVIEW DASHBOARD -->
+      <!-- ============================================================ -->
+      <section id="admin-view" class="view-panel">
+
+        <!-- Bento Metrics Row -->
+        <div class="bento-metrics-row">
+          <div class="metric-tile">
+            <div class="metric-top">
+              <span class="metric-label">Enrolled Members</span>
+              <div class="shape-icon coral" style="width: 36px; height: 36px;">
+                <span class="material-symbols-rounded" style="font-size: 18px;">group</span>
+              </div>
+            </div>
+            <div id="statMembersCount" class="metric-value">0</div>
+            <div class="metric-sub">Leaves in Merkle Tree</div>
+          </div>
+
+          <div class="metric-tile">
+            <div class="metric-top">
+              <span class="metric-label">Reports Received</span>
+              <div class="shape-icon gold" style="width: 36px; height: 36px;">
+                <span class="material-symbols-rounded" style="font-size: 18px;">description</span>
+              </div>
+            </div>
+            <div id="statReportsCount" class="metric-value">0</div>
+            <div class="metric-sub">Zero identity linkage</div>
+          </div>
+
+          <div class="metric-tile">
+            <div class="metric-top">
+              <span class="metric-label">Spent Nullifiers</span>
+              <div class="shape-icon secondary" style="width: 36px; height: 36px;">
+                <span class="material-symbols-rounded" style="font-size: 18px;">key</span>
+              </div>
+            </div>
+            <div id="statNullifiersCount" class="metric-value">0</div>
+            <div class="metric-sub">Duplicate prevention keys</div>
+          </div>
+
+          <div class="metric-tile">
+            <div class="metric-top">
+              <span class="metric-label">Active Channels</span>
+              <div class="shape-icon" style="width: 36px; height: 36px; background-color: var(--primary); color: var(--on-primary);">
+                <span class="material-symbols-rounded" style="font-size: 18px;">category</span>
+              </div>
+            </div>
+            <div id="statTopicsCount" class="metric-value">3</div>
+            <div class="metric-sub">Scoped reporting topics</div>
+          </div>
+        </div>
+
+        <div class="bento-grid-2col">
+          <!-- Left: Reports Inbox -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="shape-icon coral">
+                  <span class="material-symbols-rounded">inbox</span>
+                </div>
+                <div>
+                  <h3>Submitted Reports Inbox</h3>
+                  <span class="badge badge-tonal">Verified ZK Submissions</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <select id="adminTopicFilter" class="input-select" style="padding: 6px 12px; font-size: 0.8rem; width: auto;">
+                  <option value="">All Topics</option>
+                </select>
+                <button id="refreshReportsBtn" class="btn btn-tonal btn-small" title="Refresh Inbox">
+                  <span class="material-symbols-rounded" style="font-size: 16px;">refresh</span>
+                </button>
+              </div>
+            </div>
+            <p class="card-desc">
+              All reports verified via Zero-Knowledge SNARKs. Zero IP addresses, user-agents, or cookies were logged.
+            </p>
+
+            <div id="reportsList" class="reports-list">
+              <div style="padding: 24px; text-align: center; color: var(--on-surface-variant); font-size: 0.88rem;">
+                No reports submitted yet. Submit a report from the Member Portal.
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Report Verification Inspector -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="shape-icon gold">
+                  <span class="material-symbols-rounded">search_check</span>
+                </div>
+                <div>
+                  <h3>Verification Inspector</h3>
+                  <span id="inspectorStatusBadge" class="badge badge-outline">Select a Report</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="inspectorContent" class="inspector-content-box">
+              <p style="color: var(--on-surface-variant); font-size: 0.88rem;">
+                Click any report from the inbox to inspect its Zero-Knowledge Proof parameters, topic nullifier, and moderation status.
+              </p>
+            </div>
+
+            <div style="margin-top: 18px;">
+              <h4 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; color: var(--on-surface);">
+                Administrative Privacy &amp; Credential Controls
+              </h4>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button id="auditDbBtn" class="btn btn-tonal">
+                  <span class="material-symbols-rounded">policy</span>
+                  <span>Dump Database &amp; Audit Privacy</span>
+                </button>
+                <button id="showRevokeModalBtn" class="btn btn-danger">
+                  <span class="material-symbols-rounded">person_remove</span>
+                  <span>Revoke Credential</span>
+                </button>
+              </div>
+              <div id="auditResultBox" class="audit-terminal-box" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- VIEW 3: SECURITY PLAYGROUND & ADVERSARIAL EVALUATION -->
+      <!-- ============================================================ -->
+      <section id="security-view" class="view-panel">
+
+        <!-- Bento Hero Banner -->
+        <div class="security-hero-bento">
+          <div class="security-hero-text">
+            <h2>Adversarial Security Evaluation Lab</h2>
+            <p>
+              Execute live simulated attacks against the cryptographic primitives to verify resistance to
+              forged credentials, duplicate submissions, cross-topic correlation, rogue administrators, and collusion scenarios.
+            </p>
+          </div>
+          <button id="runAllSimulationsBtn" class="btn btn-primary" style="height: 52px; white-space: nowrap;">
+            <span class="material-symbols-rounded">play_circle</span>
+            <span>Execute All Security Simulations</span>
+          </button>
+        </div>
+
+        <!-- Attack Simulation Matrix -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="shape-icon gold">
+                <span class="material-symbols-rounded">security</span>
+              </div>
+              <div>
+                <h3>Attack Suite &amp; Verification Matrix</h3>
+                <span id="evalOverallScore" class="badge badge-primary">Ready to Run</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="securityTestsList" class="security-tests-grid">
+            <div class="test-item-card">
+              <div class="test-header">
+                <span class="test-id">TEST-1</span>
+                <h4>Forged Credentials Attack</h4>
+                <span class="badge badge-outline">Standby</span>
+              </div>
+              <p class="test-threat-line"><strong>Threat Model:</strong> Outsider without valid credentials attempting to construct fake ZK proofs.</p>
+            </div>
+            <div class="test-item-card">
+              <div class="test-header">
+                <span class="test-id">TEST-2</span>
+                <h4>Duplicate Submissions (Sybil Replay)</h4>
+                <span class="badge badge-outline">Standby</span>
+              </div>
+              <p class="test-threat-line"><strong>Threat Model:</strong> Malicious insider attempting double-voting to manipulate results.</p>
+            </div>
+            <div class="test-item-card">
+              <div class="test-header">
+                <span class="test-id">TEST-3</span>
+                <h4>Cross-Topic Correlation Analysis</h4>
+                <span class="badge badge-outline">Standby</span>
+              </div>
+              <p class="test-threat-line"><strong>Threat Model:</strong> Profiler tracking nullifiers across topics to de-anonymize whistleblowers.</p>
+            </div>
+            <div class="test-item-card">
+              <div class="test-header">
+                <span class="test-id">TEST-4</span>
+                <h4>Rogue Administrator DB Dump Audit</h4>
+                <span class="badge badge-outline">Standby</span>
+              </div>
+              <p class="test-threat-line"><strong>Threat Model:</strong> Corrupt admin with full SQL read access inspecting server storage.</p>
+            </div>
+            <div class="test-item-card">
+              <div class="test-header">
+                <span class="test-id">TEST-5</span>
+                <h4>Report Payload Tampering Resistance</h4>
+                <span class="badge badge-outline">Standby</span>
+              </div>
+              <p class="test-threat-line"><strong>Threat Model:</strong> MitM attacker intercepting valid proof and modifying report content.</p>
+            </div>
+            <div class="test-item-card">
+              <div class="test-header">
+                <span class="test-id">TEST-6</span>
+                <h4>Credential Revocation Enforcement</h4>
+                <span class="badge badge-outline">Standby</span>
+              </div>
+              <p class="test-threat-line"><strong>Threat Model:</strong> Terminated employee attempting to submit reports after dismissal.</p>
+            </div>
+            <div class="test-item-card">
+              <div class="test-header">
+                <span class="test-id">TEST-7</span>
+                <h4>Rate-Limiting (RLN) Slashing</h4>
+                <span class="badge badge-outline">Standby</span>
+              </div>
+              <p class="test-threat-line"><strong>Threat Model:</strong> Spammer double-signing; Shamir Secret Sharing extracts identity.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collusion Scenarios Matrix Table -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="shape-icon secondary">
+                <span class="material-symbols-rounded">handshake</span>
+              </div>
+              <div>
+                <h3>Collusion Scenarios &amp; Threat Model Analysis</h3>
+                <span class="badge badge-tonal">Multi-Party Adversary Resistance</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="collusion-table-wrapper">
+            <table class="collusion-table">
+              <thead>
+                <tr>
+                  <th>Collusion Scenario</th>
+                  <th>Adversary Capabilities</th>
+                  <th>Cryptographic Defense &amp; System Outcome</th>
+                  <th>Residual Attack Surface</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Scenario A: Rogue Admin + Malicious Insider</strong></td>
+                  <td>Admin has all database records. Malicious member Eve gives admin her secret key to isolate Alice.</td>
+                  <td><span class="badge badge-primary">PROTECTED</span> Eve's secrets reveal 0 bits about Alice. Anonymity set size is simply reduced by 1.</td>
+                  <td>Small group sizes (&lt;5 members). Solved by batching threshold minimums.</td>
+                </tr>
+                <tr>
+                  <td><strong>Scenario B: ISP / Network Observer + Rogue Admin</strong></td>
+                  <td>Network eavesdropper tracks packet timing from client IP and matches with server arrival.</td>
+                  <td><span class="badge badge-primary">PROTECTED</span> Mitigated by MetadataProtector timing jitter (50-200ms) and hourly timestamp quantization.</td>
+                  <td>Advanced global traffic correlation. Solved by Tor or onion relays.</td>
+                </tr>
+                <tr>
+                  <td><strong>Scenario C: Target Manager + HR Admin</strong></td>
+                  <td>Accused manager demands audit of verification records to identify the whistleblower.</td>
+                  <td><span class="badge badge-primary">MATHEMATICALLY IMPOSSIBLE</span> Stored verification record contains only &pi; and nullifier N. Inverting N is 2^254 infeasible.</td>
+                  <td>Linguistic/stylometric leakage. Solved by ContentSanitizer warnings.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Modal: Revocation Dialog -->
+    <div id="revokeModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Revoke Member Credential</h3>
+          <button id="closeRevokeModalBtn" class="modal-close-btn">&times;</button>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--on-surface-variant); margin-bottom: 16px;">
+          Revoking a member zeroes their leaf commitment in the Sparse Merkle Tree and publishes an updated Merkle root.
+          The revoked member will fail subsequent Zero-Knowledge verification.
+        </p>
+        <div class="form-group">
+          <label>Select Member to Revoke</label>
+          <select id="revokeSelect" class="input-select">
+            <option value="">Loading members...</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button id="cancelRevokeBtn" class="btn btn-tonal">Cancel</button>
+          <button id="confirmRevokeBtn" class="btn btn-danger">Confirm Revocation &amp; Update Root</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div>
+          <strong>INCOGNITO</strong> &mdash; Cryptographically Guaranteed Whistleblower Protection.
+        </div>
+        <div class="footer-tags">
+          <span class="footer-tag">BN254 Scalar Field</span>
+          <span class="footer-tag">Poseidon Hash</span>
+          <span class="footer-tag">Topic Nullifiers</span>
+          <span class="footer-tag">RLN Anti-Spam</span>
+          <span class="footer-tag">0 IP Retention</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "incognito-privacy-reporting",
+  "version": "1.0.0",
+  "description": "Incognito: Privacy-Preserving Reporting System for Verified Members using Zero-Knowledge Proofs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js",
+    "start:ts": "ts-node src/server/app.ts",
+    "test:ts": "ts-node tests/runAllTests.ts",
+    "build": "tsc",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "zero-knowledge",
+    "privacy",
+    "zk-snark",
+    "nullifiers",
+    "anonymous-reporting",
+    "whistleblowing",
+    "cryptography"
+  ],
+  "author": "Incognito Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.24",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
