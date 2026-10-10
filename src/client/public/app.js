@@ -481,6 +481,8 @@ async function handleReportSubmission() {
       challenge: '0x' + challenge.toString(16),
       responseNullifier: '0x' + sNullifier.toString(16),
       responseTrapdoor: '0x' + sTrapdoor.toString(16),
+      blindedNullifierCommit: '0x' + blindedNullifierCommit.toString(16),
+      blindedSecretCommit: '0x' + blindedSecretCommit.toString(16),
       publicInputs: {
         merkleRoot: merkleProof.root,
         topicId,

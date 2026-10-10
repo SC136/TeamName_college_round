@@ -10,6 +10,7 @@ import { IncognitoStorage, StoredReport } from './storage';
 import { MerkleTree } from '../crypto/merkleTree';
 import { TopicNullifierRegistry } from '../crypto/nullifier';
 import { ZKEngine, ZKProof } from '../crypto/zkEngine';
+import { ZKVerificationService } from '../services/zkService';
 import { ContentSanitizer } from '../crypto/sanitization';
 import { ModerationService } from './moderationService';
 import { RLNShare, RLNSystem } from '../crypto/rln';
@@ -89,7 +90,7 @@ export class ReportService {
 
     // 3. Zero-Knowledge Cryptographic Verification
     // Verify proof matches the original submitted text (integrity binding)
-    const verification = ZKEngine.verifyProof(req.zkProof, this.merkleTree, req.content);
+    const verification = await ZKVerificationService.verifyProof(req.zkProof, this.merkleTree, req.content);
     if (!verification.valid) {
       MetadataProtector.logPrivacyEvent('ZKP_VERIFICATION_FAILED', {
         topicId: req.topicId,
@@ -146,10 +147,12 @@ export class ReportService {
 
       existingShares.push(req.rlnShare);
       this.rlnSharesMap.set(rlnNullifier, existingShares);
+      this.storage.getSupabaseService().insertRlnShare(req.rlnShare as any).catch(() => {});
     }
 
     // 6. Record Nullifier in spent registry
     this.nullifierRegistry.spend(req.topicId, nullifierBigInt);
+    this.storage.getSupabaseService().recordSpentNullifier(req.topicId, req.zkProof.publicInputs.nullifierHash).catch(() => {});
 
     // 7. Sanitize attachments if present
     const cleanAttachments = (req.attachments || []).map((att) =>

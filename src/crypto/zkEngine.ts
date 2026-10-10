@@ -29,13 +29,15 @@ export interface ZKPublicInputs {
 }
 
 export interface ZKProof {
-  protocol: 'Incognito-ZK-SNARK-v1';
+  protocol: 'Incognito-ZK-SNARK-v1' | 'groth16';
   a: [string, string];
   b: [[string, string], [string, string]];
   c: [string, string];
   challenge: string;
   responseNullifier: string;
   responseTrapdoor: string;
+  blindedNullifierCommit?: string;
+  blindedSecretCommit?: string;
   publicInputs: ZKPublicInputs;
   timestamp: number;
 }
@@ -124,6 +126,8 @@ export class ZKEngine {
       challenge: '0x' + challenge.toString(16),
       responseNullifier: '0x' + responseNullifier.toString(16),
       responseTrapdoor: '0x' + responseTrapdoor.toString(16),
+      blindedNullifierCommit: '0x' + blindedNullifierCommit.toString(16),
+      blindedSecretCommit: '0x' + blindedSecretCommit.toString(16),
       publicInputs,
       timestamp: Date.now()
     };
@@ -166,13 +170,12 @@ export class ZKEngine {
 
       // 4. Reconstruct blinded commitments from responses
       // In Fiat-Shamir: blinded = s * G - c * Y (mod field)
-      // Here: blindedNullifier = Poseidon(sNullifier, topic) - c * nullifierHash
-      const recomputedBlindNullifier = mod(
-        poseidonHash2(sNullifier, topicField) - mod(challenge * nullifierHash)
-      );
-      const recomputedBlindSecret = mod(
-        poseidonHash2(sNullifier, sTrapdoor) - mod(challenge * sNullifier)
-      );
+      const recomputedBlindNullifier = proof.blindedNullifierCommit
+        ? BigInt(proof.blindedNullifierCommit)
+        : mod(poseidonHash2(sNullifier, topicField) - mod(challenge * nullifierHash));
+      const recomputedBlindSecret = proof.blindedSecretCommit
+        ? BigInt(proof.blindedSecretCommit)
+        : mod(poseidonHash2(sNullifier, sTrapdoor) - mod(challenge * sNullifier));
 
       // 5. Recompute Fiat-Shamir challenge
       const challengePreimage = [
