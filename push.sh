@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Initializing Git repository..."
-git init
-git branch -M main
-git remote remove origin 2>/dev/null || true
-git remote add origin https://github.com/SC136/TeamName_college_round.git
-
-echo "Adding files..."
+echo "Adding changes..."
 git add .
 
 echo "Committing changes..."
-git commit -m "feat: complete Incognito zero-knowledge privacy reporting system with Material 3 Expressive UI" -m "Co-Authored-By: Claude Code <noreply@anthropic.com>"
+git commit -m "feat: implement 5-step member onboarding with org search and ephemeral ID verification" -m "Co-Authored-By: Claude Code <noreply@anthropic.com>" || true
 
 echo "Pushing to GitHub..."
-git push -u origin main --force
+git push origin main
 echo "Done!"

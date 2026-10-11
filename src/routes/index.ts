@@ -3,10 +3,12 @@ import { TopicController } from '../controllers/topicController';
 import { MembershipController } from '../controllers/membershipController';
 import { ReportController } from '../controllers/reportController';
 import { SecurityController } from '../controllers/securityController';
+import { AuthController } from '../controllers/authController';
 import { createTopicRouter } from './topicRoutes';
 import { createMembershipRouter } from './membershipRoutes';
 import { createReportRouter } from './reportRoutes';
 import { createSecurityRouter } from './securityRoutes';
+import { createAuthRouter, createOrganizationRouter } from './authRoutes';
 import { IncognitoStorage } from '../server/storage';
 import { MembershipService } from '../server/membershipService';
 import { RevocationService } from '../server/revocationService';
@@ -32,6 +34,7 @@ export function createApiRouter(deps: RouteDependencies): Router {
   );
   const reportController = new ReportController(deps.reportService, deps.storage);
   const securityController = new SecurityController(deps.storage, deps.nullifierRegistry);
+  const authController = new AuthController(deps.storage, deps.membershipService);
 
   // Health check
   router.get('/health', (req: Request, res: Response) => {
@@ -44,6 +47,8 @@ export function createApiRouter(deps: RouteDependencies): Router {
   });
 
   // Mount modular route handlers
+  router.use('/auth', createAuthRouter(authController));
+  router.use('/organizations', createOrganizationRouter(authController));
   router.use('/topics', createTopicRouter(topicController));
   router.use('/membership', createMembershipRouter(membershipController));
   router.use('/reports', createReportRouter(reportController));

@@ -5,6 +5,7 @@
 import { runCryptoTests } from './crypto.test';
 import { runZkpTests } from './zkp.test';
 import { runSecurityEvaluationTests } from './securityEvaluation.test';
+import { runOnboardingTests } from './onboarding.test';
 
 async function main() {
   console.log('=============================================================');
@@ -15,6 +16,7 @@ async function main() {
     runCryptoTests();
     runZkpTests();
     await runSecurityEvaluationTests();
+    runOnboardingTests();
 
     console.log('\n=============================================================');
     console.log('  ALL TEST SUITES PASSED WITH 100% SUCCESSFUL DEFENSES!');

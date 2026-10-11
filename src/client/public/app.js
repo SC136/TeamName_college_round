@@ -146,7 +146,13 @@ const state = {
   currentIdentity: null,
   enrolledCommitments: new Set(),
   topics: [],
-  selectedReportId: null
+  selectedReportId: null,
+  currentUser: null,
+  organizations: [],
+  selectedOrg: null,
+  idProofBase64: null,
+  idProofFilename: null,
+  authMode: 'register'
 };
 
 // ============================================================================
@@ -156,11 +162,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
   setupThemeToggle();
   setupMemberPortal();
+  setupOnboardingWorkflow();
   setupAdminDashboard();
   setupSecurityPlayground();
 
-  // Load initial topics and switch to default profile
+  // Load initial topics and organizations
   await loadTopics();
+  await loadOrganizations();
   switchProfile('alice');
   await refreshAdminStats();
 });
@@ -215,6 +223,371 @@ function setupNavigation() {
       }
     });
   });
+}
+
+// ============================================================================
+// Member Onboarding & Ephemeral ID Verification Workflow
+// ============================================================================
+function setStepperStep(step) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById(`stepIndicator${i}`);
+    if (!el) continue;
+    el.classList.remove('active', 'done');
+    if (i < step) {
+      el.classList.add('done');
+    } else if (i === step) {
+      el.classList.add('active');
+    }
+  }
+}
+
+async function loadOrganizations(search = '') {
+  try {
+    const url = search ? `/api/organizations?search=${encodeURIComponent(search)}` : '/api/organizations';
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.success) {
+      state.organizations = data.organizations;
+      renderOrgDropdown(data.organizations);
+    }
+  } catch (err) {
+    console.error('Failed to load organizations:', err);
+  }
+}
+
+function renderOrgDropdown(orgs) {
+  const dropdown = document.getElementById('orgDropdownList');
+  if (!dropdown) return;
+
+  if (orgs.length === 0) {
+    dropdown.innerHTML = '<div style="padding: 12px 16px; color: var(--on-surface-variant); font-size: 0.85rem;">No matching institutions found.</div>';
+    return;
+  }
+
+  dropdown.innerHTML = orgs.map(org => `
+    <div class="org-dropdown-item" data-id="${escapeHtml(org.id)}">
+      <div>
+        <div class="org-dropdown-item-title">${escapeHtml(org.name)}</div>
+        <div class="org-dropdown-item-domain">${escapeHtml(org.domain)} &bull; ${escapeHtml(org.description.substring(0, 50))}...</div>
+      </div>
+      <span class="badge badge-tonal" style="font-size: 0.68rem;">${escapeHtml(org.category)}</span>
+    </div>
+  `).join('');
+
+  dropdown.querySelectorAll('.org-dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const orgId = item.dataset.id;
+      const org = state.organizations.find(o => o.id === orgId);
+      if (org) {
+        selectOrganization(org);
+      }
+    });
+  });
+}
+
+function selectOrganization(org) {
+  state.selectedOrg = org;
+  document.getElementById('selectedOrgId').value = org.id;
+  document.getElementById('selectedOrgName').textContent = org.name;
+  document.getElementById('selectedOrgCategory').textContent = org.category;
+  document.getElementById('selectedOrgBadge').style.display = 'inline-flex';
+  document.getElementById('orgDropdownList').style.display = 'none';
+  document.getElementById('orgSearchInput').value = '';
+  setStepperStep(2);
+}
+
+function clearSelectedOrganization() {
+  state.selectedOrg = null;
+  document.getElementById('selectedOrgId').value = '';
+  document.getElementById('selectedOrgBadge').style.display = 'none';
+  setStepperStep(1);
+}
+
+function setupOnboardingWorkflow() {
+  const orgSearchInput = document.getElementById('orgSearchInput');
+  const orgDropdown = document.getElementById('orgDropdownList');
+  const clearOrgBtn = document.getElementById('clearSelectedOrgBtn');
+  const toggleAuthModeBtn = document.getElementById('toggleAuthModeBtn');
+  const authForm = document.getElementById('authForm');
+  const authFormTitle = document.getElementById('authFormTitle');
+  const authSubmitText = document.getElementById('authSubmitText');
+  const backToRegisterBtn = document.getElementById('backToRegisterBtn');
+  const idDropzone = document.getElementById('idDropzone');
+  const idFileInput = document.getElementById('idFileInput');
+  const removeIdProofBtn = document.getElementById('removeIdProofBtn');
+  const verifyIdBtn = document.getElementById('verifyIdBtn');
+  const proceedToWorkspaceBtn = document.getElementById('proceedToWorkspaceBtn');
+  const memberLogoutBtn = document.getElementById('memberLogoutBtn');
+
+  // Search input listeners
+  orgSearchInput.addEventListener('focus', () => {
+    orgDropdown.style.display = 'block';
+    renderOrgDropdown(state.organizations);
+  });
+
+  orgSearchInput.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    orgDropdown.style.display = 'block';
+    const filtered = state.organizations.filter(o =>
+      o.name.toLowerCase().includes(q) ||
+      o.domain.toLowerCase().includes(q) ||
+      o.category.toLowerCase().includes(q)
+    );
+    renderOrgDropdown(filtered);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.searchable-dropdown-wrapper')) {
+      if (orgDropdown) orgDropdown.style.display = 'none';
+    }
+  });
+
+  clearOrgBtn.addEventListener('click', clearSelectedOrganization);
+
+  // Toggle Auth Mode (Register vs Login)
+  toggleAuthModeBtn.addEventListener('click', () => {
+    if (state.authMode === 'register') {
+      state.authMode = 'login';
+      authFormTitle.textContent = 'Existing Member Login';
+      authSubmitText.textContent = 'Log In to Account';
+      toggleAuthModeBtn.querySelector('span').textContent = 'Switch to Registration';
+      document.querySelector('.searchable-dropdown-wrapper').parentElement.style.display = 'none';
+    } else {
+      state.authMode = 'register';
+      authFormTitle.textContent = 'Step 1 & 2: Member Account & Organization';
+      authSubmitText.textContent = 'Continue to ID Proof Verification';
+      toggleAuthModeBtn.querySelector('span').textContent = 'Switch to Login';
+      document.querySelector('.searchable-dropdown-wrapper').parentElement.style.display = 'block';
+    }
+  });
+
+  // Handle Auth Form Submit (Register or Login)
+  authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('authUsername').value.trim();
+    const password = document.getElementById('authPassword').value;
+
+    if (state.authMode === 'register') {
+      if (!state.selectedOrg) {
+        alert('Please search and select your organization/workplace/university.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            password,
+            organizationId: state.selectedOrg.id
+          })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert(`Registration failed: ${data.error}`);
+          return;
+        }
+
+        state.currentUser = data.user;
+        // Derive client-side ZK identity keys from user session
+        switchProfile(`user_${username}_${data.user.id}`);
+
+        // Transition to Step 3 (ID Proof Upload)
+        document.getElementById('onboardingStageRegister').style.display = 'none';
+        document.getElementById('onboardingStageIdUpload').style.display = 'block';
+        setStepperStep(3);
+      } catch (err) {
+        alert(`Registration error: ${err.message}`);
+      }
+    } else {
+      // Login mode
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert(`Login failed: ${data.error}`);
+          return;
+        }
+
+        state.currentUser = data.user;
+        switchProfile(`user_${username}_${data.user.id}`);
+
+        if (data.user.verified) {
+          // Already verified! Go straight to Step 5 (Workspace)
+          enterVerifiedWorkspace(data.user);
+        } else {
+          // Needs verification
+          const org = state.organizations.find(o => o.id === data.user.organizationId);
+          if (org) selectOrganization(org);
+          document.getElementById('onboardingStageRegister').style.display = 'none';
+          document.getElementById('onboardingStageIdUpload').style.display = 'block';
+          setStepperStep(3);
+        }
+      } catch (err) {
+        alert(`Login error: ${err.message}`);
+      }
+    }
+  });
+
+  // Back button from ID Upload to Stage 1
+  backToRegisterBtn.addEventListener('click', () => {
+    document.getElementById('onboardingStageIdUpload').style.display = 'none';
+    document.getElementById('onboardingStageRegister').style.display = 'block';
+    setStepperStep(state.selectedOrg ? 2 : 1);
+  });
+
+  // Dropzone file handling
+  idDropzone.addEventListener('click', (e) => {
+    if (!e.target.closest('#removeIdProofBtn')) {
+      idFileInput.click();
+    }
+  });
+
+  idDropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    idDropzone.classList.add('dragover');
+  });
+
+  idDropzone.addEventListener('dragleave', () => {
+    idDropzone.classList.remove('dragover');
+  });
+
+  idDropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    idDropzone.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelected(e.dataTransfer.files[0]);
+    }
+  });
+
+  idFileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileSelected(e.target.files[0]);
+    }
+  });
+
+  removeIdProofBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.idProofBase64 = null;
+    state.idProofFilename = null;
+    idFileInput.value = '';
+    document.getElementById('dropzonePreview').style.display = 'none';
+    document.getElementById('dropzonePrompt').style.display = 'block';
+    verifyIdBtn.disabled = true;
+    setStepperStep(3);
+  });
+
+  function handleFileSelected(file) {
+    state.idProofFilename = file.name;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      state.idProofBase64 = event.target.result;
+      document.getElementById('idPreviewImg').src = event.target.result;
+      document.getElementById('idFilenameDisplay').textContent = file.name;
+      document.getElementById('dropzonePrompt').style.display = 'none';
+      document.getElementById('dropzonePreview').style.display = 'block';
+      verifyIdBtn.disabled = false;
+      setStepperStep(4);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Verify ID & Trash Action
+  verifyIdBtn.addEventListener('click', async () => {
+    if (!state.currentUser || !state.idProofBase64) return;
+
+    verifyIdBtn.disabled = true;
+    verifyIdBtn.innerHTML = `
+      <span class="material-symbols-rounded">sync</span>
+      <span>Verifying In RAM &amp; Purging ID Proof...</span>
+    `;
+
+    try {
+      const commHex = '0x' + state.currentIdentity.commitment.toString(16);
+      const res = await fetch('/api/auth/verify-id', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: state.currentUser.id,
+          organizationId: state.currentUser.organizationId,
+          idProofBase64: state.idProofBase64,
+          filename: state.idProofFilename,
+          commitment: commHex
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Verification failed: ${data.error}`);
+        verifyIdBtn.disabled = false;
+        verifyIdBtn.innerHTML = `
+          <span class="material-symbols-rounded">verified_user</span>
+          <span>Verify Membership &amp; Permanently Trash ID Proof</span>
+        `;
+        return;
+      }
+
+      // Explicitly clear local memory copy as well
+      state.idProofBase64 = null;
+
+      // Render Destruction Receipt Box
+      const receipt = data.destructionReceipt;
+      document.getElementById('destructStatusVal').textContent = receipt.status + ' (' + receipt.storageRetention + ')';
+      document.getElementById('destructOrgVal').textContent = receipt.organization;
+      document.getElementById('destructAuditVal').textContent = receipt.auditCertificate;
+      document.getElementById('idDestructionReceiptBox').style.display = 'block';
+
+      state.currentUser.verified = true;
+      document.getElementById('displayCurrentRoot').textContent = data.enrolledRoot.substring(0, 16) + '...';
+      const badge = document.getElementById('enrollmentStatusBadge');
+      badge.textContent = 'Enrolled in Tree';
+      badge.className = 'badge badge-primary';
+
+      await refreshAdminStats();
+    } catch (err) {
+      alert(`Verification error: ${err.message}`);
+      verifyIdBtn.disabled = false;
+      verifyIdBtn.innerHTML = `
+        <span class="material-symbols-rounded">verified_user</span>
+        <span>Verify Membership &amp; Permanently Trash ID Proof</span>
+      `;
+    }
+  });
+
+  // Proceed to Workspace Button
+  proceedToWorkspaceBtn.addEventListener('click', () => {
+    if (state.currentUser) {
+      enterVerifiedWorkspace(state.currentUser);
+    }
+  });
+
+  // Logout Button
+  memberLogoutBtn.addEventListener('click', () => {
+    state.currentUser = null;
+    document.getElementById('verifiedStatusBanner').style.display = 'none';
+    document.getElementById('onboardingSection').style.display = 'block';
+    document.getElementById('onboardingStageRegister').style.display = 'block';
+    document.getElementById('onboardingStageIdUpload').style.display = 'none';
+    document.getElementById('idDestructionReceiptBox').style.display = 'none';
+    document.getElementById('authForm').reset();
+    clearSelectedOrganization();
+    setStepperStep(1);
+    switchProfile('alice');
+  });
+
+  function enterVerifiedWorkspace(user) {
+    setStepperStep(5);
+    document.getElementById('onboardingSection').style.display = 'none';
+    document.getElementById('verifiedMemberWorkspace').style.display = 'block';
+    document.getElementById('verifiedStatusBanner').style.display = 'flex';
+    document.getElementById('currentUsernameDisplay').textContent = user.username;
+    document.getElementById('currentOrgDisplay').textContent = user.organizationName || 'Verified Organization';
+  }
 }
 
 // ============================================================================

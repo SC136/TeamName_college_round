@@ -55,229 +55,483 @@
       <!-- VIEW 1: MEMBER PORTAL -->
       <!-- ============================================================ -->
       <section id="member-view" class="view-panel active">
-        <div class="bento-grid-2col">
 
-          <!-- Card 1: Identity & Credential Management -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="shape-icon coral">
-                  <span class="material-symbols-rounded">fingerprint</span>
-                </div>
-                <div>
-                  <h3>Member ZK Identity</h3>
-                  <span class="badge badge-tonal">Client-Side Secrets</span>
-                </div>
-              </div>
+        <!-- 5-Step Member Journey Stepper -->
+        <div class="stepper-card">
+          <div class="stepper-title-row">
+            <div class="shape-icon coral" style="width: 38px; height: 38px;">
+              <span class="material-symbols-rounded" style="font-size: 20px;">badge</span>
             </div>
-            <p class="card-desc">
-              Your secret keys are generated and held exclusively in your browser memory.
-              Only your public identity commitment is enrolled in the organization's Sparse Merkle Tree.
-            </p>
-
-            <!-- Identity Profile Picker Chips -->
-            <div class="form-group">
-              <label>Choose Persona / Generate Keys</label>
-              <div class="profile-pills-row" id="profilePillsRow">
-                <button type="button" class="profile-chip active" data-profile="alice">
-                  <div class="profile-avatar-shape">A</div>
-                  <span>Alice (Staff)</span>
-                </button>
-                <button type="button" class="profile-chip" data-profile="bob">
-                  <div class="profile-avatar-shape">B</div>
-                  <span>Bob (Associate)</span>
-                </button>
-                <button type="button" class="profile-chip" data-profile="charlie">
-                  <div class="profile-avatar-shape">C</div>
-                  <span>Charlie (Technician)</span>
-                </button>
-                <button type="button" class="profile-chip" data-profile="custom">
-                  <div class="profile-avatar-shape">+</div>
-                  <span>New Random</span>
-                </button>
-              </div>
-
-              <!-- Hidden select for programmatic backward compatibility -->
-              <select id="memberProfileSelect" style="display: none;">
-                <option value="alice">alice</option>
-                <option value="bob">bob</option>
-                <option value="charlie">charlie</option>
-                <option value="custom">custom</option>
-              </select>
-
-              <button id="enrollBtn" class="btn btn-secondary btn-small" style="margin-top: 6px;">
-                <span class="material-symbols-rounded" style="font-size: 18px;">how_to_reg</span>
-                <span>Enroll Commitment to Merkle Tree</span>
-              </button>
-            </div>
-
-            <!-- Credential Bento Details -->
-            <div class="credential-bento">
-              <div class="cred-row">
-                <span class="cred-label">Public Identity Commitment (Enrolled Leaf):</span>
-                <div class="code-tile">
-                  <span id="displayCommitment" class="code-text">Loading...</span>
-                </div>
-              </div>
-              <div class="cred-row">
-                <span class="cred-label">Secret Nullifier (Never Transmitted):</span>
-                <div class="code-tile">
-                  <span id="displayNullifier" class="code-text">0x••••••••••••••••</span>
-                </div>
-              </div>
-              <div class="cred-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                <span class="cred-label">Merkle Tree Status:</span>
-                <span id="enrollmentStatusBadge" class="badge badge-primary">Enrolled in Tree</span>
-              </div>
-              <div class="cred-row">
-                <span class="cred-label">Current Merkle Root:</span>
-                <div class="code-tile">
-                  <span id="displayCurrentRoot" class="code-text">Loading...</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Asymmetric Note with Caveat Annotation -->
-            <div class="asymmetric-note">
-              <strong>Cryptographic Privacy Guarantee:</strong>
-              Even if administrators dump all stored records and server memory, your identity cannot be linked to any report.
-              Each topic receives an independent, uncorrelated cryptographic nullifier.
-              <span class="handwritten-annotation">&mdash; mathematically impossible to de-anonymize!</span>
+            <div>
+              <h4 style="font-size: 1.05rem; font-weight: 600;">Member Onboarding &amp; Privacy Verification</h4>
+              <p style="font-size: 0.8rem; color: var(--on-surface-variant);">
+                Verify institutional membership with zero identity leakage &bull; Uploaded ID card is destroyed post-verification
+              </p>
             </div>
           </div>
+          <div class="stepper-steps">
+            <div class="stepper-step active" id="stepIndicator1">
+              <span class="step-num-badge">1</span>
+              <span>Register</span>
+            </div>
+            <div class="stepper-divider"></div>
+            <div class="stepper-step" id="stepIndicator2">
+              <span class="step-num-badge">2</span>
+              <span>Organization</span>
+            </div>
+            <div class="stepper-divider"></div>
+            <div class="stepper-step" id="stepIndicator3">
+              <span class="step-num-badge">3</span>
+              <span>Upload ID Proof</span>
+            </div>
+            <div class="stepper-divider"></div>
+            <div class="stepper-step" id="stepIndicator4">
+              <span class="step-num-badge">4</span>
+              <span>Verify &amp; Trash ID</span>
+            </div>
+            <div class="stepper-divider"></div>
+            <div class="stepper-step" id="stepIndicator5">
+              <span class="step-num-badge">5</span>
+              <span>Anonymous Report</span>
+            </div>
+          </div>
+        </div>
 
-          <!-- Card 2: Anonymous Report Submission -->
-          <div class="card">
+        <!-- ONBOARDING SECTION (Steps 1 to 4) -->
+        <div id="onboardingSection" class="card" style="margin-bottom: 24px;">
+
+          <!-- STAGE 1: Registration & Organization Selection -->
+          <div id="onboardingStageRegister">
             <div class="card-header">
               <div class="card-title-group">
                 <div class="shape-icon gold">
-                  <span class="material-symbols-rounded">mark_email_unread</span>
+                  <span class="material-symbols-rounded">person_add</span>
                 </div>
                 <div>
-                  <h3>Submit Anonymous Report</h3>
-                  <span class="badge badge-gold">Zero-Knowledge SNARK</span>
+                  <h3 id="authFormTitle">Step 1 &amp; 2: Member Account &amp; Organization</h3>
+                  <span class="badge badge-tonal">Institutional Onboarding</span>
                 </div>
               </div>
-            </div>
-
-            <form id="reportForm">
-              <div class="form-group">
-                <label for="topicSelect">Select Reporting Channel / Category</label>
-                <select id="topicSelect" class="input-select" required>
-                  <option value="">-- Choose a Topic --</option>
-                </select>
-                <small id="topicQuotaNote" style="font-size: 0.78rem; color: var(--on-surface-variant); margin-top: 4px; display: block;">
-                  Quota: 1 submission per verified member.
-                </small>
-              </div>
-
-              <div class="form-group">
-                <label for="reportContent">Report Body</label>
-                <textarea id="reportContent" class="input-textarea" rows="6" placeholder="Detail observed misconduct, safety hazard, or concern. Please describe facts objectively..." required></textarea>
-
-                <div class="sanitizer-bar">
-                  <div class="sanitizer-status">
-                    <span class="dot-pulse"></span>
-                    <span>Metadata &amp; PII Sanitizer Active</span>
-                  </div>
-                  <div id="riskIndicator">
-                    <span class="badge badge-tonal">Risk: LOW</span>
-                  </div>
-                </div>
-
-                <div id="sanitizerWarningBox" class="sanitizer-warnings" style="display: none;"></div>
-              </div>
-
-              <!-- Rate-Limiting Nullifier (RLN) Toggle -->
-              <div class="form-group">
-                <label class="toggle-row">
-                  <div class="toggle-switch">
-                    <input type="checkbox" id="rlnCheckbox" checked>
-                    <span class="toggle-slider"></span>
-                  </div>
-                  <div style="font-size: 0.84rem; line-height: 1.35;">
-                    <strong>Attach Rate-Limiting Nullifier (RLN)</strong>
-                    <div style="color: var(--on-surface-variant); font-size: 0.78rem;">
-                      Shamir polynomial secret sharing mathematically slashes spammers while protecting honest whistleblowers.
-                    </div>
-                  </div>
-                </label>
-              </div>
-
-              <button type="submit" id="submitReportBtn" class="btn btn-primary btn-large">
-                <span class="material-symbols-rounded">enhanced_encryption</span>
-                <span>Generate ZK Proof &amp; Submit Anonymously</span>
+              <button type="button" id="toggleAuthModeBtn" class="btn btn-tonal btn-small">
+                <span>Switch to Login</span>
               </button>
-            </form>
+            </div>
+            <p class="card-desc">
+              Create a member account and select your organization, university, or workplace.
+              Your username is used solely for member dashboard access &mdash; it is never attached to reports.
+            </p>
 
-            <!-- ZK Proof Pipeline Progress -->
-            <div id="zkProgressBox" class="zk-pipeline-card" style="display: none;">
-              <div class="pipeline-header">
-                <h4>
-                  <span class="material-symbols-rounded">psychology</span>
-                  <span>Zero-Knowledge Proof Generation Pipeline</span>
-                </h4>
-                <span class="badge badge-tonal">BN254 Scalar Field</span>
+            <form id="authForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="authUsername">Username</label>
+                <input type="text" id="authUsername" class="input-text" placeholder="e.g., alex_dev" required autocomplete="username">
               </div>
-              <div class="zk-steps-matrix">
-                <div class="zk-step-item active" id="stepWitness">
-                  <span class="step-num">01</span>
-                  <span>Computing Secret Witness &amp; Blinding Factors</span>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="authPassword">Password</label>
+                <input type="password" id="authPassword" class="input-text" placeholder="Min. 6 characters" required autocomplete="current-password">
+              </div>
+
+              <!-- Searchable Organization Dropdown -->
+              <div class="form-group" style="grid-column: 1 / -1; margin-bottom: 0;">
+                <label for="orgSearchInput">Select Workplace, University, or Institution</label>
+                <div class="searchable-dropdown-wrapper">
+                  <div class="search-input-container">
+                    <span class="material-symbols-rounded search-icon">search</span>
+                    <input type="text" id="orgSearchInput" class="input-text" placeholder="Search organization (e.g., Stanford, MIT, Acme, City Health...)" autocomplete="off">
+                  </div>
+                  <input type="hidden" id="selectedOrgId" required>
+
+                  <!-- Selected Organization Chip Display -->
+                  <div id="selectedOrgBadge" class="selected-org-chip" style="display: none;">
+                    <div class="shape-icon coral" style="width: 26px; height: 26px;">
+                      <span class="material-symbols-rounded" style="font-size: 14px;">apartment</span>
+                    </div>
+                    <span id="selectedOrgName" style="font-weight: 600;">-</span>
+                    <span id="selectedOrgCategory" class="badge badge-primary" style="font-size: 0.68rem; padding: 2px 8px;">-</span>
+                    <button type="button" id="clearSelectedOrgBtn" class="clear-chip-btn">&times;</button>
+                  </div>
+
+                  <!-- Dropdown Search Results List -->
+                  <div id="orgDropdownList" class="org-dropdown-menu">
+                    <!-- Populated dynamically via JS -->
+                  </div>
                 </div>
-                <div class="zk-step-item" id="stepMerkle">
-                  <span class="step-num">02</span>
-                  <span>Fetching Sparse Merkle Path from Registry</span>
+                <small class="form-help">Select the verified organization you belong to. A valid membership ID proof will be required in the next step.</small>
+              </div>
+
+              <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+                <button type="submit" id="authSubmitBtn" class="btn btn-primary">
+                  <span class="material-symbols-rounded">arrow_forward</span>
+                  <span id="authSubmitText">Continue to ID Proof Verification</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- STAGE 2: ID Card Upload & Immediate Trashing -->
+          <div id="onboardingStageIdUpload" style="display: none;">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="shape-icon coral">
+                  <span class="material-symbols-rounded">id_card</span>
                 </div>
-                <div class="zk-step-item" id="stepNullifier">
-                  <span class="step-num">03</span>
-                  <span>Deriving Topic-Scoped Cryptographic Nullifier</span>
+                <div>
+                  <h3>Step 3 &amp; 4: Upload ID Proof &amp; Ephemeral Verification</h3>
+                  <span class="badge badge-primary">Zero Storage Retention</span>
                 </div>
-                <div class="zk-step-item" id="stepProof">
-                  <span class="step-num">04</span>
-                  <span>Proving SNARK Constraints (Fiat-Shamir PoK)</span>
+              </div>
+              <button type="button" id="backToRegisterBtn" class="btn btn-tonal btn-small">
+                <span class="material-symbols-rounded" style="font-size: 16px;">arrow_back</span>
+                <span>Back</span>
+              </button>
+            </div>
+            <p class="card-desc">
+              Upload your institutional ID card, student pass, or employee badge to verify membership.
+              <strong>Privacy Assurance:</strong> The image is verified in volatile RAM and <strong>permanently wiped with zero-overwriting</strong>. Zero image or biometric data is stored in the database or server.
+            </p>
+
+            <div class="id-verification-grid">
+              <!-- Left: Upload Dropzone -->
+              <div>
+                <div class="id-upload-dropzone" id="idDropzone">
+                  <input type="file" id="idFileInput" accept="image/*,.pdf" style="display: none;">
+                  <div id="dropzonePrompt">
+                    <div class="shape-icon gold" style="width: 52px; height: 52px; margin: 0 auto 12px;">
+                      <span class="material-symbols-rounded" style="font-size: 28px;">cloud_upload</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 6px;">Click or Drag to Upload ID Card</h4>
+                    <p style="font-size: 0.8rem; color: var(--on-surface-variant);">
+                      Supports PNG, JPG, or PDF badge scans (Max 10MB)
+                    </p>
+                  </div>
+                  <!-- Preview Card -->
+                  <div id="dropzonePreview" style="display: none; text-align: center;">
+                    <img id="idPreviewImg" src="" alt="ID Preview" style="max-height: 180px; max-width: 100%; border-radius: var(--rounded-md); border: 1px solid var(--outline-variant); margin-bottom: 10px;">
+                    <div style="font-size: 0.82rem; font-weight: 600; color: var(--on-surface);" id="idFilenameDisplay">-</div>
+                    <button type="button" id="removeIdProofBtn" class="btn btn-tonal btn-small" style="margin-top: 8px;">
+                      <span class="material-symbols-rounded" style="font-size: 14px;">delete</span>
+                      <span>Remove &amp; Pick Another</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="zk-step-item" id="stepRelay">
-                  <span class="step-num">05</span>
-                  <span>Blind Network Delivery via Sanitized Relay</span>
+              </div>
+
+              <!-- Right: Verification Action & Privacy Details -->
+              <div style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="asymmetric-note" style="margin-top: 0;">
+                  <strong>Strict Privacy Contract:</strong>
+                  Upon clicking Verify, the server analyzes the badge in transient memory, enrolls your anonymous commitment into the Merkle Tree, and executes:
+                  <div class="code-tile" style="margin: 8px 0; color: var(--tertiary);">
+                    <code>buffer.fill(0); // Zero-fill RAM overwrite</code>
+                  </div>
+                  <span class="handwritten-annotation">&mdash; your ID card is permanently trashed!</span>
+                </div>
+
+                <div style="margin-top: 16px;">
+                  <button type="button" id="verifyIdBtn" class="btn btn-primary btn-large" disabled>
+                    <span class="material-symbols-rounded">verified_user</span>
+                    <span>Verify Membership &amp; Permanently Trash ID Proof</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- Submission Receipt (Asymmetric Vinyl Sticker) -->
-            <div id="receiptBox" class="receipt-sticker" style="display: none;">
+            <!-- Destruction Confirmation Receipt Box -->
+            <div id="idDestructionReceiptBox" class="receipt-sticker" style="display: none; margin-top: 20px;">
               <div class="receipt-sticker-head">
-                <div class="receipt-stamp-badge">
-                  <span class="material-symbols-rounded">verified</span>
+                <div class="receipt-stamp-badge" style="background-color: var(--primary); color: var(--on-primary);">
+                  <span class="material-symbols-rounded">delete_forever</span>
                 </div>
                 <div>
-                  <h4 style="font-size: 1.05rem; font-weight: 600;">Report Successfully Verified &amp; Submitted!</h4>
+                  <h4 style="font-size: 1.05rem; font-weight: 600; color: var(--on-surface);">Identity Verified &amp; ID Proof Permanently Trashed!</h4>
                   <p style="font-size: 0.82rem; color: var(--on-surface-variant);">
-                    Proof verified against Merkle root. Zero identity or network metadata transmitted.
+                    Zero persistent storage retention. Anonymous public commitment enrolled into Sparse Merkle Tree.
                   </p>
                 </div>
               </div>
               <div class="receipt-grid">
                 <div>
-                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Report ID:</span>
-                  <div style="font-weight: 600;" id="receiptId">-</div>
+                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Destruction Status:</span>
+                  <div style="font-weight: 600; color: var(--primary);" id="destructStatusVal">PERMANENTLY DESTROYED (0 BYTES RETAINED)</div>
                 </div>
                 <div>
-                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Severity Classification:</span>
-                  <div><span id="receiptSeverity" class="badge badge-primary">-</span></div>
+                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Organization:</span>
+                  <div style="font-weight: 600;" id="destructOrgVal">-</div>
                 </div>
                 <div style="grid-column: 1 / -1;">
-                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Topic-Scoped Nullifier Hash:</span>
-                  <div class="code-tile" style="margin-top: 4px;">
-                    <span id="receiptNullifier" class="code-text">-</span>
-                  </div>
+                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Audit Certificate:</span>
+                  <p style="font-size: 0.8rem; color: var(--on-surface); margin-top: 4px;" id="destructAuditVal">-</p>
                 </div>
-                <div style="grid-column: 1 / -1;">
-                  <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Quantized Timestamp:</span>
-                  <div id="receiptTimestamp" style="font-family: var(--font-mono); font-size: 0.82rem;">-</div>
-                </div>
+              </div>
+              <div style="margin-top: 16px; text-align: right;">
+                <button type="button" id="proceedToWorkspaceBtn" class="btn btn-primary">
+                  <span class="material-symbols-rounded">lock_open</span>
+                  <span>Enter Verified Member Reporting Workspace</span>
+                </button>
               </div>
             </div>
 
+          </div>
+
+        </div>
+
+        <!-- VERIFIED MEMBER REPORTING WORKSPACE (Step 5) -->
+        <div id="verifiedMemberWorkspace">
+
+          <!-- Active Member Status Header Bar -->
+          <div class="verified-status-banner" id="verifiedStatusBanner" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="shape-icon coral" style="width: 36px; height: 36px;">
+                <span class="material-symbols-rounded" style="font-size: 20px;">verified</span>
+              </div>
+              <div>
+                <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--on-surface-variant); letter-spacing: 0.04em;">Signed In As</span>
+                <div style="font-weight: 600; font-size: 0.95rem; color: var(--on-surface);">
+                  <span id="currentUsernameDisplay">Anonymous Member</span>
+                  <span id="currentOrgDisplay" class="badge badge-primary" style="margin-left: 8px;">-</span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="badge badge-tonal">
+                <span class="material-symbols-rounded" style="font-size: 14px;">delete_sweep</span>
+                <span>ID Card Trashed</span>
+              </span>
+              <button type="button" id="memberLogoutBtn" class="btn btn-tonal btn-small">
+                <span class="material-symbols-rounded" style="font-size: 16px;">logout</span>
+                <span>Log Out</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bento-grid-2col">
+
+            <!-- Card 1: Identity & Credential Management -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="shape-icon coral">
+                    <span class="material-symbols-rounded">fingerprint</span>
+                  </div>
+                  <div>
+                    <h3>Member ZK Identity</h3>
+                    <span class="badge badge-tonal">Client-Side Secrets</span>
+                  </div>
+                </div>
+              </div>
+              <p class="card-desc">
+                Your secret keys are generated and held exclusively in your browser memory.
+                Only your public identity commitment is enrolled in the organization's Sparse Merkle Tree.
+              </p>
+
+              <!-- Quick Demo Persona Switcher (For Testing & Evaluation) -->
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label style="margin-bottom: 0;">Quick Persona Preset (Evaluator Demo)</label>
+                  <span style="font-size: 0.75rem; color: var(--tertiary);">Switch preset test identities</span>
+                </div>
+                <div class="profile-pills-row" id="profilePillsRow">
+                  <button type="button" class="profile-chip active" data-profile="alice">
+                    <div class="profile-avatar-shape">A</div>
+                    <span>Alice (Staff)</span>
+                  </button>
+                  <button type="button" class="profile-chip" data-profile="bob">
+                    <div class="profile-avatar-shape">B</div>
+                    <span>Bob (Associate)</span>
+                  </button>
+                  <button type="button" class="profile-chip" data-profile="charlie">
+                    <div class="profile-avatar-shape">C</div>
+                    <span>Charlie (Technician)</span>
+                  </button>
+                  <button type="button" class="profile-chip" data-profile="custom">
+                    <div class="profile-avatar-shape">+</div>
+                    <span>New Random</span>
+                  </button>
+                </div>
+
+                <!-- Hidden select for programmatic backward compatibility -->
+                <select id="memberProfileSelect" style="display: none;">
+                  <option value="alice">alice</option>
+                  <option value="bob">bob</option>
+                  <option value="charlie">charlie</option>
+                  <option value="custom">custom</option>
+                </select>
+
+                <button id="enrollBtn" class="btn btn-secondary btn-small" style="margin-top: 6px;">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">how_to_reg</span>
+                  <span>Enroll Commitment to Merkle Tree</span>
+                </button>
+              </div>
+
+              <!-- Credential Bento Details -->
+              <div class="credential-bento">
+                <div class="cred-row">
+                  <span class="cred-label">Public Identity Commitment (Enrolled Leaf):</span>
+                  <div class="code-tile">
+                    <span id="displayCommitment" class="code-text">Loading...</span>
+                  </div>
+                </div>
+                <div class="cred-row">
+                  <span class="cred-label">Secret Nullifier (Never Transmitted):</span>
+                  <div class="code-tile">
+                    <span id="displayNullifier" class="code-text">0x••••••••••••••••</span>
+                  </div>
+                </div>
+                <div class="cred-row" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                  <span class="cred-label">Merkle Tree Status:</span>
+                  <span id="enrollmentStatusBadge" class="badge badge-primary">Enrolled in Tree</span>
+                </div>
+                <div class="cred-row">
+                  <span class="cred-label">Current Merkle Root:</span>
+                  <div class="code-tile">
+                    <span id="displayCurrentRoot" class="code-text">Loading...</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Asymmetric Note with Caveat Annotation -->
+              <div class="asymmetric-note">
+                <strong>Cryptographic Privacy Guarantee:</strong>
+                Even if administrators dump all stored records and server memory, your identity cannot be linked to any report.
+                Each topic receives an independent, uncorrelated cryptographic nullifier.
+                <span class="handwritten-annotation">&mdash; mathematically impossible to de-anonymize!</span>
+              </div>
+            </div>
+
+            <!-- Card 2: Anonymous Report Submission -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="shape-icon gold">
+                    <span class="material-symbols-rounded">mark_email_unread</span>
+                  </div>
+                  <div>
+                    <h3>Submit Anonymous Report</h3>
+                    <span class="badge badge-gold">Zero-Knowledge SNARK</span>
+                  </div>
+                </div>
+              </div>
+
+              <form id="reportForm">
+                <div class="form-group">
+                  <label for="topicSelect">Select Reporting Channel / Category</label>
+                  <select id="topicSelect" class="input-select" required>
+                    <option value="">-- Choose a Topic --</option>
+                  </select>
+                  <small id="topicQuotaNote" style="font-size: 0.78rem; color: var(--on-surface-variant); margin-top: 4px; display: block;">
+                    Quota: 1 submission per verified member.
+                  </small>
+                </div>
+
+                <div class="form-group">
+                  <label for="reportContent">Report Body</label>
+                  <textarea id="reportContent" class="input-textarea" rows="6" placeholder="Detail observed misconduct, safety hazard, or concern. Please describe facts objectively..." required></textarea>
+
+                  <div class="sanitizer-bar">
+                    <div class="sanitizer-status">
+                      <span class="dot-pulse"></span>
+                      <span>Metadata &amp; PII Sanitizer Active</span>
+                    </div>
+                    <div id="riskIndicator">
+                      <span class="badge badge-tonal">Risk: LOW</span>
+                    </div>
+                  </div>
+
+                  <div id="sanitizerWarningBox" class="sanitizer-warnings" style="display: none;"></div>
+                </div>
+
+                <!-- Rate-Limiting Nullifier (RLN) Toggle -->
+                <div class="form-group">
+                  <label class="toggle-row">
+                    <div class="toggle-switch">
+                      <input type="checkbox" id="rlnCheckbox" checked>
+                      <span class="toggle-slider"></span>
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.35;">
+                      <strong>Attach Rate-Limiting Nullifier (RLN)</strong>
+                      <div style="color: var(--on-surface-variant); font-size: 0.78rem;">
+                        Shamir polynomial secret sharing mathematically slashes spammers while protecting honest whistleblowers.
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <button type="submit" id="submitReportBtn" class="btn btn-primary btn-large">
+                  <span class="material-symbols-rounded">enhanced_encryption</span>
+                  <span>Generate ZK Proof &amp; Submit Anonymously</span>
+                </button>
+              </form>
+
+              <!-- ZK Proof Pipeline Progress -->
+              <div id="zkProgressBox" class="zk-pipeline-card" style="display: none;">
+                <div class="pipeline-header">
+                  <h4>
+                    <span class="material-symbols-rounded">psychology</span>
+                    <span>Zero-Knowledge Proof Generation Pipeline</span>
+                  </h4>
+                  <span class="badge badge-tonal">BN254 Scalar Field</span>
+                </div>
+                <div class="zk-steps-matrix">
+                  <div class="zk-step-item active" id="stepWitness">
+                    <span class="step-num">01</span>
+                    <span>Computing Secret Witness &amp; Blinding Factors</span>
+                  </div>
+                  <div class="zk-step-item" id="stepMerkle">
+                    <span class="step-num">02</span>
+                    <span>Fetching Sparse Merkle Path from Registry</span>
+                  </div>
+                  <div class="zk-step-item" id="stepNullifier">
+                    <span class="step-num">03</span>
+                    <span>Deriving Topic-Scoped Cryptographic Nullifier</span>
+                  </div>
+                  <div class="zk-step-item" id="stepProof">
+                    <span class="step-num">04</span>
+                    <span>Proving SNARK Constraints (Fiat-Shamir PoK)</span>
+                  </div>
+                  <div class="zk-step-item" id="stepRelay">
+                    <span class="step-num">05</span>
+                    <span>Blind Network Delivery via Sanitized Relay</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submission Receipt (Asymmetric Vinyl Sticker) -->
+              <div id="receiptBox" class="receipt-sticker" style="display: none;">
+                <div class="receipt-sticker-head">
+                  <div class="receipt-stamp-badge">
+                    <span class="material-symbols-rounded">verified</span>
+                  </div>
+                  <div>
+                    <h4 style="font-size: 1.05rem; font-weight: 600;">Report Successfully Verified &amp; Submitted!</h4>
+                    <p style="font-size: 0.82rem; color: var(--on-surface-variant);">
+                      Proof verified against Merkle root. Zero identity or network metadata transmitted.
+                    </p>
+                  </div>
+                </div>
+                <div class="receipt-grid">
+                  <div>
+                    <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Report ID:</span>
+                    <div style="font-weight: 600;" id="receiptId">-</div>
+                  </div>
+                  <div>
+                    <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Severity Classification:</span>
+                    <div><span id="receiptSeverity" class="badge badge-primary">-</span></div>
+                  </div>
+                  <div style="grid-column: 1 / -1;">
+                    <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Topic-Scoped Nullifier Hash:</span>
+                    <div class="code-tile" style="margin-top: 4px;">
+                      <span id="receiptNullifier" class="code-text">-</span>
+                    </div>
+                  </div>
+                  <div style="grid-column: 1 / -1;">
+                    <span style="color: var(--on-surface-variant); font-size: 0.75rem; text-transform: uppercase;">Quantized Timestamp:</span>
+                    <div id="receiptTimestamp" style="font-family: var(--font-mono); font-size: 0.82rem;">-</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </section>
